@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import { getMetricsUseCase } from '../../application/use-cases/get-metrics.use-case';
-import type { MetricsReaderPort } from '../../../../shared/ports/metrics-reader.port';
+import type { MetricsReaderPort } from '../../shared/ports/metrics-reader.port';
+import { getMetrics } from './system.service';
 
 interface SystemControllerDependencies {
   metricsReader: MetricsReaderPort;
@@ -39,7 +39,7 @@ export function createSystemController({ metricsReader }: SystemControllerDepend
     metricsHandler: async (req: Request, res: Response): Promise<void> => {
       req.log.debug('Metrics endpoint requested');
 
-      const result = await getMetricsUseCase(metricsReader);
+      const result = await getMetrics(metricsReader);
       res.setHeader('Content-Type', result.contentType);
       res.send(result.payload);
     },

@@ -1,6 +1,6 @@
 import { Router } from 'express';
+import type { MetricsReaderPort } from '../../shared/ports/metrics-reader.port';
 import { createSystemController } from './system.controller';
-import type { MetricsReaderPort } from '../../../../shared/ports/metrics-reader.port';
 
 interface SystemRouterDependencies {
   metricsReader: MetricsReaderPort;

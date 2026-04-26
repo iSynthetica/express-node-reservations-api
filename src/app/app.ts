@@ -10,7 +10,7 @@ import { env } from './env';
 import { logger } from './logger';
 import { createErrorHandler } from './http/middleware/error-handler.middleware';
 import { notFoundHandler } from './http/middleware/not-found-handler.middleware';
-import { createSystemModuleRouter } from '../modules/system/public-api';
+import { createSystemModuleRouter } from '../modules/system';
 
 export function createApp() {
   const app = express();
