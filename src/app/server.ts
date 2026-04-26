@@ -2,6 +2,7 @@ import type { Server } from 'node:http';
 import { createApp } from './app';
 import { env } from './env';
 import { logger } from './logger';
+import type { DataBootstrapResult } from './bootstrap-data';
 
 function closeServer(server: Server): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -15,8 +16,8 @@ function closeServer(server: Server): Promise<void> {
   });
 }
 
-export function startServer(): Server {
-  const app = createApp();
+export function startServer(data: DataBootstrapResult): Server {
+  const app = createApp(data);
 
   const server = app.listen(env.PORT, () => {
     logger.info({ port: env.PORT }, 'Server started');

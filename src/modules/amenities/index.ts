@@ -5,7 +5,6 @@ export function createAmenitiesRepository(): AmenitiesRepositoryPort {
   return new InMemoryAmenitiesRepository();
 }
 
-// optional explicit export if needed for bootstrap-only concrete usage
 export { InMemoryAmenitiesRepository };
 
 export type { Amenity, AmenityRow } from './amenities.types';
