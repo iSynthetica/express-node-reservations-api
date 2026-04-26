@@ -17,11 +17,6 @@ export function createReservationsController({
       const amenityId = Number(req.params.amenityId);
       const date = Number(req.query.date);
 
-      if (!Number.isFinite(amenityId) || !Number.isFinite(date)) {
-        res.status(400).json({ error: 'Validation failed' });
-        return;
-      }
-
       const amenity = await amenitiesRepo.getById(amenityId);
       if (!amenity) {
         res.status(404).json({ error: 'Amenity not found' });
@@ -44,11 +39,6 @@ export function createReservationsController({
 
     getByUser: async (req: Request, res: Response): Promise<void> => {
       const userId = Number(req.params.userId);
-
-      if (!Number.isFinite(userId)) {
-        res.status(400).json({ error: 'Validation failed' });
-        return;
-      }
 
       const reservations = await reservationsRepo.getByUserId(userId);
 
