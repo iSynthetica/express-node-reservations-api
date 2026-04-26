@@ -15,6 +15,8 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
   LOG_FILE_PATH: z.string().min(1).default('./logs/app.log'),
   CORS_ORIGIN: z.string().min(1).default('http://localhost:3000'),
+  AMENITIES_CSV_PATH: z.string().min(1).default('data/Amenity.csv'),
+  RESERVATIONS_CSV_PATH: z.string().min(1).default('data/Reservations.csv'),
   RATE_LIMIT_WINDOW_MS: z.coerce
     .number()
     .int()
