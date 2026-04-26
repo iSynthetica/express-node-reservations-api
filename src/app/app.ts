@@ -11,12 +11,15 @@ import { logger } from './logger';
 import { createErrorHandler } from './http/middleware/error-handler.middleware';
 import { notFoundHandler } from './http/middleware/not-found-handler.middleware';
 import { createSystemModuleRouter } from '../modules/system';
+import { createReservationsModuleRouter } from '../modules/reservations';
+import type { DataBootstrapResult } from './bootstrap-data';
 
-export function createApp() {
+export function createApp(data: DataBootstrapResult) {
   const app = express();
   const systemRouter = createSystemModuleRouter({
     metricsReader: appMetricsReader,
   });
+
   const errorHandler = createErrorHandler({
     logger,
     isProduction: env.NODE_ENV === 'production',
@@ -32,6 +35,13 @@ export function createApp() {
   app.use(httpMetricsMiddleware);
 
   app.use(systemRouter);
+  app.use(
+    '/api/v1',
+    createReservationsModuleRouter({
+      amenitiesRepo: data.amenitiesRepo,
+      reservationsRepo: data.reservationsRepo,
+    }),
+  );
   app.use(notFoundHandler);
   app.use(errorHandler);
 

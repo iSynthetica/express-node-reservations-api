@@ -4,8 +4,8 @@ import { logger } from './app/logger';
 
 async function main(): Promise<void> {
   try {
-    await bootstrapData();
-    startServer();
+    const data = await bootstrapData();
+    startServer(data);
   } catch (err) {
     logger.error({ err }, 'Startup failed during data bootstrap');
     process.exit(1);

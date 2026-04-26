@@ -39,7 +39,14 @@ export default [
       ecmaVersion: 'latest',
       sourceType: 'module',
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: [
+            'tests/helpers/*.ts',
+            'tests/integration/*.ts',
+            'tests/unit/*.ts',
+            'vitest.config.ts',
+          ],
+        },
         tsconfigRootDir,
       },
       globals: {
