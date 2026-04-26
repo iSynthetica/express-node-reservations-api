@@ -50,6 +50,48 @@ To stop a running local server started with `pnpm dev` or `pnpm start`, press `C
 
 - `GET /` returns a basic starter message
 - `GET /health` returns a health check response
+- `GET /api/v1/amenities/:amenityId/reservations?date=<unix_ms>` returns amenity reservations for a specific day
+- `GET /api/v1/users/:userId/reservations` returns user reservations grouped by date
+
+### Core Endpoint Examples
+
+`date` query must be a Unix timestamp in milliseconds.
+
+```bash
+curl "http://localhost:3000/api/v1/amenities/10/reservations?date=1592179200000"
+```
+
+```json
+[
+  {
+    "id": 1,
+    "userId": 1,
+    "startTime": "05:00",
+    "duration": 60,
+    "amenityName": "Central Gym"
+  }
+]
+```
+
+```bash
+curl "http://localhost:3000/api/v1/users/1/reservations"
+```
+
+```json
+[
+  {
+    "date": "2020-06-15",
+    "reservations": [
+      {
+        "id": 1,
+        "amenityId": 10,
+        "startTime": "05:00",
+        "duration": 60
+      }
+    ]
+  }
+]
+```
 
 ## NPM Scripts
 

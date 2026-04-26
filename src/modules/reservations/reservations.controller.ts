@@ -1,7 +1,7 @@
 import { type Request, type Response } from 'express';
 import { type AmenitiesRepositoryPort } from '../amenities/amenities.repository.port';
 import { type ReservationsRepositoryPort } from './reservations.repository.port';
-import { calcDuration, minutesToTime, timestampToDateString } from '../../shared/utils/date-time';
+import { createReservationsService } from './reservations.service';
 
 interface ReservationsControllerDeps {
   reservationsRepo: ReservationsRepositoryPort;
@@ -12,58 +12,25 @@ export function createReservationsController({
   reservationsRepo,
   amenitiesRepo,
 }: ReservationsControllerDeps) {
+  const reservationsService = createReservationsService({ reservationsRepo, amenitiesRepo });
+
   return {
     getByAmenityAndDate: async (req: Request, res: Response): Promise<void> => {
       const amenityId = Number(req.params.amenityId);
       const date = Number(req.query.date);
 
-      const amenity = await amenitiesRepo.getById(amenityId);
-      if (!amenity) {
+      const result = await reservationsService.getAmenityReservations(amenityId, date);
+      if (result.status === 'not_found') {
         res.status(404).json({ error: 'Amenity not found' });
         return;
       }
 
-      const reservations = await reservationsRepo.getByAmenityAndDate(amenityId, date);
-      reservations.sort((a, b) => a.startTime - b.startTime);
-
-      res.status(200).json(
-        reservations.map((r) => ({
-          id: r.id,
-          userId: r.userId,
-          startTime: minutesToTime(r.startTime),
-          duration: calcDuration(r.startTime, r.endTime),
-          amenityName: amenity.name,
-        })),
-      );
+      res.status(200).json(result.data);
     },
 
     getByUser: async (req: Request, res: Response): Promise<void> => {
       const userId = Number(req.params.userId);
-
-      const reservations = await reservationsRepo.getByUserId(userId);
-
-      const grouped = new Map<number, typeof reservations>();
-      reservations.forEach((r) => {
-        const arr = grouped.get(r.date) ?? [];
-        arr.push(r);
-        grouped.set(r.date, arr);
-      });
-
-      const result = Array.from(grouped.entries())
-        .sort((a, b) => a[0] - b[0])
-        .map(([date, items]) => ({
-          date: timestampToDateString(date),
-          reservations: items
-            .sort((a, b) => a.startTime - b.startTime)
-            .map((r) => ({
-              id: r.id,
-              amenityId: r.amenityId,
-              startTime: minutesToTime(r.startTime),
-              duration: calcDuration(r.startTime, r.endTime),
-            })),
-        }));
-
-      res.status(200).json(result);
+      res.status(200).json(await reservationsService.getUserReservations(userId));
     },
   };
 }
