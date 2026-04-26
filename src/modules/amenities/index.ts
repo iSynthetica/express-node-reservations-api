@@ -1,4 +1,4 @@
-import { InMemoryAmenitiesRepository } from './amenities.repository';
+import { InMemoryAmenitiesRepository } from './amenities.in-memory.repository';
 import { type AmenitiesRepositoryPort } from './amenities.repository.port';
 
 export function createAmenitiesRepository(): AmenitiesRepositoryPort {

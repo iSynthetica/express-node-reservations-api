@@ -1,4 +1,4 @@
-import { InMemoryReservationsRepository } from './reservations.repository';
+import { InMemoryReservationsRepository } from './reservations.in-memory.repository';
 import { type ReservationsRepositoryPort } from './reservations.repository.port';
 
 export function createReservationsRepository(): ReservationsRepositoryPort {
