@@ -4,6 +4,7 @@ import type { AuthRepositoryPort } from './auth.repository.port';
 import { createAuthRouter } from './auth.routes';
 import { AuthSqliteRepository } from './auth-sqlite.repository';
 import { createAuthService, type AuthService } from './auth.service';
+import { authMiddleware } from './auth.middleware';
 
 export function createAuthSqliteRepository(): AuthSqliteRepository {
   return new AuthSqliteRepository();
@@ -22,6 +23,8 @@ export function createAuthModuleRouter({
 
   return createAuthRouter({ controller: authController });
 }
+
+export { authMiddleware };
 
 export type { AuthRepositoryPort } from './auth.repository.port';
 export type { AuthUser, CreateAuthUserInput, PublicAuthUser } from './auth.types';
