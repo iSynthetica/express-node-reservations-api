@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { type ReservationsController } from './reservations.controller';
-import { validateRequest } from '../../shared/middleware/validate-request.middleware';
+import { validateRequest } from '../../api/middleware/validate-request.middleware';
 import { getByAmenitySchema, getByUserSchema } from './reservations.schemas';
 
 interface ReservationsRouterDeps {

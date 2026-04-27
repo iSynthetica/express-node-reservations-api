@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import type { AuthController } from './auth.controller';
-import { validateRequest } from '../../shared/middleware/validate-request.middleware';
+import { validateRequest } from '../../api/middleware/validate-request.middleware';
 import { loginSchema, registerSchema } from './auth.schemas';
 
 interface AuthRouterDeps {

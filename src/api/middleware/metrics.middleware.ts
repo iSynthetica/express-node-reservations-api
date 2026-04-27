@@ -1,5 +1,9 @@
 import type { NextFunction, Request, Response } from 'express';
-import { httpRequestDurationSeconds, httpRequestsInFlight, httpRequestsTotal } from './metrics';
+import {
+  httpRequestDurationSeconds,
+  httpRequestsInFlight,
+  httpRequestsTotal,
+} from '../../app/metrics';
 
 function getRoutePath(req: Request): string | undefined {
   const route = req.route as unknown;

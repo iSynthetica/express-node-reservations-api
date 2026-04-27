@@ -1,7 +1,7 @@
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { z, ZodError } from 'zod';
-import { AppError } from '../errors/app.error';
-import { ERROR_CODES } from '../errors/error-codes';
+import { AppError } from '../../shared/errors/app.error';
+import { ERROR_CODES } from '../../shared/errors/error-codes';
 
 interface ParsedRequestShape {
   params?: unknown;
