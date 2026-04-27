@@ -31,6 +31,8 @@ export function createApp(data: DataBootstrapResult) {
 
   app.use(container.routers.systemRouter);
   app.use('/api/v1', container.routers.reservationsRouter);
+  app.use('/api/v1', container.routers.csvRouter);
+
   app.use(notFoundHandler);
   app.use(errorHandler);
 
