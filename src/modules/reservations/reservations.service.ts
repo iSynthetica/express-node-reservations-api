@@ -1,7 +1,8 @@
 import { type Reservation } from './reservations.types';
 import { calcDuration, minutesToTime, timestampToDateString } from '../../shared/utils/date-time';
-import { type AmenitiesRepositoryPort } from '../amenities/amenities.repository.port';
+import { type AmenitiesRepositoryPort } from '../amenities';
 import { type ReservationsRepositoryPort } from './reservations.repository.port';
+import { type LoggerPort } from '../../shared/ports/logger.port';
 
 interface AmenityReservationView {
   id: number;
@@ -30,23 +31,28 @@ type AmenityReservationsResult =
 interface ReservationsServiceDeps {
   reservationsRepo: ReservationsRepositoryPort;
   amenitiesRepo: AmenitiesRepositoryPort;
+  logger: LoggerPort;
 }
 
 export function createReservationsService({
   reservationsRepo,
   amenitiesRepo,
+  logger,
 }: ReservationsServiceDeps) {
   return {
     async getAmenityReservations(
       amenityId: number,
       date: number,
     ): Promise<AmenityReservationsResult> {
-      const amenity = await amenitiesRepo.getById(amenityId);
+      logger.debug({ amenityId, date }, 'Fetching amenity reservations');
+
+      const amenity = await amenitiesRepo.findById(amenityId);
       if (!amenity) {
+        logger.debug({ amenityId }, 'Amenity not found');
         return { status: 'not_found' };
       }
 
-      const reservations = await reservationsRepo.getByAmenityAndDate(amenityId, date);
+      const reservations = await reservationsRepo.findByAmenityAndDate(amenityId, date);
 
       return {
         status: 'ok',
@@ -55,17 +61,21 @@ export function createReservationsService({
     },
 
     async getUserReservations(userId: number): Promise<UserReservationsByDateView[]> {
-      const reservations = await reservationsRepo.getByUserId(userId);
+      logger.debug({ userId }, 'Fetching user reservations');
+
+      const reservations = await reservationsRepo.findByUserId(userId);
       return groupUserReservationsByDate(reservations);
     },
   };
 }
 
+export type ReservationsService = ReturnType<typeof createReservationsService>;
+
 export function mapAmenityReservations(
-  reservations: Reservation[],
+  reservations: readonly Reservation[],
   amenityName: string,
 ): AmenityReservationView[] {
-  return reservations
+  return [...reservations]
     .sort((a, b) => a.startTime - b.startTime)
     .map((reservation) => ({
       id: reservation.id,
@@ -77,7 +87,7 @@ export function mapAmenityReservations(
 }
 
 export function groupUserReservationsByDate(
-  reservations: Reservation[],
+  reservations: readonly Reservation[],
 ): UserReservationsByDateView[] {
   const grouped = new Map<number, Reservation[]>();
   reservations.forEach((reservation) => {
@@ -90,7 +100,7 @@ export function groupUserReservationsByDate(
     .sort((a, b) => a[0] - b[0])
     .map(([date, items]) => ({
       date: timestampToDateString(date),
-      reservations: items
+      reservations: [...items]
         .sort((a, b) => a.startTime - b.startTime)
         .map((reservation) => ({
           id: reservation.id,

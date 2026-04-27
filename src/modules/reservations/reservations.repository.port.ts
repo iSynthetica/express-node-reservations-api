@@ -1,7 +1,6 @@
 import { type Reservation } from './reservations.types';
 
 export interface ReservationsRepositoryPort {
-  getAll(): Promise<Reservation[]>;
-  getByAmenityAndDate(amenityId: number, date: number): Promise<Reservation[]>;
-  getByUserId(userId: number): Promise<Reservation[]>;
+  findByAmenityAndDate(amenityId: number, date: number): Promise<readonly Reservation[]>;
+  findByUserId(userId: number): Promise<readonly Reservation[]>;
 }

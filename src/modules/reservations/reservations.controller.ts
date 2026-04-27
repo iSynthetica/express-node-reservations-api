@@ -1,19 +1,11 @@
 import { type Request, type Response } from 'express';
-import { type AmenitiesRepositoryPort } from '../amenities/amenities.repository.port';
-import { type ReservationsRepositoryPort } from './reservations.repository.port';
-import { createReservationsService } from './reservations.service';
+import { type ReservationsService } from './reservations.service';
 
 interface ReservationsControllerDeps {
-  reservationsRepo: ReservationsRepositoryPort;
-  amenitiesRepo: AmenitiesRepositoryPort;
+  reservationsService: ReservationsService;
 }
 
-export function createReservationsController({
-  reservationsRepo,
-  amenitiesRepo,
-}: ReservationsControllerDeps) {
-  const reservationsService = createReservationsService({ reservationsRepo, amenitiesRepo });
-
+export function createReservationsController({ reservationsService }: ReservationsControllerDeps) {
   return {
     getByAmenityAndDate: async (req: Request, res: Response): Promise<void> => {
       const amenityId = Number(req.params.amenityId);
@@ -34,3 +26,5 @@ export function createReservationsController({
     },
   };
 }
+
+export type ReservationsController = ReturnType<typeof createReservationsController>;

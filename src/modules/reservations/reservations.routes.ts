@@ -1,21 +1,14 @@
 import { Router } from 'express';
-import { type ReservationsRepositoryPort } from './reservations.repository.port';
-import { type AmenitiesRepositoryPort } from '../amenities/amenities.repository.port';
-import { createReservationsController } from './reservations.controller';
+import { type ReservationsController } from './reservations.controller';
 import { validateRequest } from '../../shared/middleware/validate-request.middleware';
 import { getByAmenitySchema, getByUserSchema } from './reservations.schemas';
 
 interface ReservationsRouterDeps {
-  reservationsRepo: ReservationsRepositoryPort;
-  amenitiesRepo: AmenitiesRepositoryPort;
+  controller: ReservationsController;
 }
 
-export function createReservationsRouter({
-  reservationsRepo,
-  amenitiesRepo,
-}: ReservationsRouterDeps): Router {
+export function createReservationsRouter({ controller }: ReservationsRouterDeps): Router {
   const router = Router();
-  const controller = createReservationsController({ reservationsRepo, amenitiesRepo });
 
   router.get(
     '/amenities/:amenityId/reservations',

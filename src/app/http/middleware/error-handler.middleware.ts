@@ -14,11 +14,18 @@ function isLoggerPort(value: unknown): value is LoggerPort {
   }
 
   const candidate = value as {
+    debug?: unknown;
+    info?: unknown;
     error?: unknown;
     warn?: unknown;
   };
 
-  return typeof candidate.error === 'function' && typeof candidate.warn === 'function';
+  return (
+    typeof candidate.debug === 'function' &&
+    typeof candidate.info === 'function' &&
+    typeof candidate.error === 'function' &&
+    typeof candidate.warn === 'function'
+  );
 }
 
 function getRequestLogger(req: Request, fallbackLogger: LoggerPort): LoggerPort {
