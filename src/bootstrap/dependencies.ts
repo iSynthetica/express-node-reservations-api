@@ -14,7 +14,6 @@ import {
 import { createCsvModuleRouter } from '../modules/csv';
 import { createAuthModuleRouter } from '../modules/auth';
 import { createSystemModuleRouter } from '../modules/system';
-import { appMetricsReader } from '../app/metrics-reader.adapter';
 import { logger } from '../app/logger';
 import type { LoggerPort } from '../shared/ports/logger.port';
 import type { DataBootstrapResult } from '../app/bootstrap-data';
@@ -46,10 +45,7 @@ export function createDependencies(data: DataBootstrapResult): AppDependencies {
   });
 
   const reservationsRouter = createReservationsModuleRouter(reservationsController);
-
-  const systemRouter = createSystemModuleRouter({
-    metricsReader: appMetricsReader,
-  });
+  const systemRouter = createSystemModuleRouter();
 
   const csvRouter = createCsvModuleRouter();
   const authRouter = createAuthModuleRouter();

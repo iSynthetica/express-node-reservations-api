@@ -1,12 +1,7 @@
 import type { Request, Response } from 'express';
-import type { MetricsReaderPort } from '../../shared/ports/metrics-reader.port';
-import { getMetrics } from './system.service';
+import { getMetrics, getMetricsContentType } from '../../api/middleware/metrics.middleware';
 
-interface SystemControllerDependencies {
-  metricsReader: MetricsReaderPort;
-}
-
-export function createSystemController({ metricsReader }: SystemControllerDependencies) {
+export function createSystemController() {
   return {
     rootHandler: (req: Request, res: Response): void => {
       req.log.debug('Serving root endpoint');
@@ -39,9 +34,9 @@ export function createSystemController({ metricsReader }: SystemControllerDepend
     metricsHandler: async (req: Request, res: Response): Promise<void> => {
       req.log.debug('Metrics endpoint requested');
 
-      const result = await getMetrics(metricsReader);
-      res.setHeader('Content-Type', result.contentType);
-      res.send(result.payload);
+      const payload = await getMetrics();
+      res.setHeader('Content-Type', getMetricsContentType());
+      res.send(payload);
     },
 
     errorTestHandler: (req: Request, _res: Response): void => {

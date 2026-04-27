@@ -1,14 +1,9 @@
 import { Router } from 'express';
-import type { MetricsReaderPort } from '../../shared/ports/metrics-reader.port';
 import { createSystemController } from './system.controller';
 
-interface SystemRouterDependencies {
-  metricsReader: MetricsReaderPort;
-}
-
-export function createSystemRouter({ metricsReader }: SystemRouterDependencies): Router {
+export function createSystemRouter(): Router {
   const systemRouter = Router();
-  const controller = createSystemController({ metricsReader });
+  const controller = createSystemController();
 
   systemRouter.get('/', controller.rootHandler);
   systemRouter.get('/health', controller.healthHandler);
