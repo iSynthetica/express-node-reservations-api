@@ -27,11 +27,13 @@ interface AuthDatabaseWithStatements extends AuthDatabase {
 
 export class AuthSqliteRepository implements AuthRepositoryPort {
   constructor(
-    private readonly db: AuthDatabaseWithStatements = getAuthDb() as AuthDatabaseWithStatements,
+    private readonly dbProvider: () => AuthDatabaseWithStatements = () =>
+      getAuthDb() as AuthDatabaseWithStatements,
   ) {}
 
   findByUsername(username: string): Promise<AuthUser | null> {
-    const stmt = this.db.prepare(
+    const db = this.dbProvider();
+    const stmt = db.prepare(
       `SELECT id, username, password_hash, created_at
        FROM users
        WHERE username = ?`,
@@ -51,9 +53,10 @@ export class AuthSqliteRepository implements AuthRepositoryPort {
   }
 
   createUser(input: CreateAuthUserInput): Promise<PublicAuthUser> {
+    const db = this.dbProvider();
     const createdAt = Date.now();
 
-    const insertStmt = this.db.prepare(
+    const insertStmt = db.prepare(
       `INSERT INTO users (username, password_hash, created_at)
        VALUES (?, ?, ?)`,
     ) as InsertUserStatement;
