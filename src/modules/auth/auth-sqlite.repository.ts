@@ -1,7 +1,6 @@
-import type Database from 'better-sqlite3';
 import type { AuthRepositoryPort } from './auth.repository.port';
 import type { AuthUser, CreateAuthUserInput, PublicAuthUser } from './auth.types';
-import { getAuthDb } from './infra/auth-sqlite.db';
+import { getAuthDb, type AuthDatabase } from './infra/auth-sqlite.db';
 
 interface UserRow {
   id: number;
@@ -10,15 +9,33 @@ interface UserRow {
   created_at: number;
 }
 
+interface SelectUserStatement {
+  get(username: string): UserRow | undefined;
+}
+
+interface InsertUserResult {
+  lastInsertRowid: number | bigint;
+}
+
+interface InsertUserStatement {
+  run(username: string, passwordHash: string, createdAt: number): InsertUserResult;
+}
+
+interface AuthDatabaseWithStatements extends AuthDatabase {
+  prepare(sql: string): SelectUserStatement | InsertUserStatement;
+}
+
 export class AuthSqliteRepository implements AuthRepositoryPort {
-  constructor(private readonly db: Database.Database = getAuthDb()) {}
+  constructor(
+    private readonly db: AuthDatabaseWithStatements = getAuthDb() as AuthDatabaseWithStatements,
+  ) {}
 
   findByUsername(username: string): Promise<AuthUser | null> {
-    const stmt = this.db.prepare<[string], UserRow>(
+    const stmt = this.db.prepare(
       `SELECT id, username, password_hash, created_at
        FROM users
        WHERE username = ?`,
-    );
+    ) as SelectUserStatement;
 
     const row = stmt.get(username);
     if (!row) {
@@ -36,10 +53,10 @@ export class AuthSqliteRepository implements AuthRepositoryPort {
   createUser(input: CreateAuthUserInput): Promise<PublicAuthUser> {
     const createdAt = Date.now();
 
-    const insertStmt = this.db.prepare<[string, string, number]>(
+    const insertStmt = this.db.prepare(
       `INSERT INTO users (username, password_hash, created_at)
        VALUES (?, ?, ?)`,
-    );
+    ) as InsertUserStatement;
 
     const result = insertStmt.run(input.username, input.passwordHash, createdAt);
 

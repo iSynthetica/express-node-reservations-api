@@ -20,6 +20,13 @@ interface CreateAuthServiceDeps {
 export function createAuthService({ authRepository }: CreateAuthServiceDeps): AuthService {
   return {
     async register(input: RegisterInput): Promise<PublicAuthUser> {
+      // Defensive guard in case route validation is bypassed.
+      if (!input.username || !input.password) {
+        throw new AppError(400, 'Validation failed', {
+          code: ERROR_CODES.VALIDATION_ERROR,
+        });
+      }
+
       const existingUser = await authRepository.findByUsername(input.username);
 
       if (existingUser) {
