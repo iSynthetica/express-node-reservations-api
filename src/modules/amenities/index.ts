@@ -1,11 +1,16 @@
-import { InMemoryAmenitiesRepository } from './amenities.in-memory.repository';
-import { type AmenitiesRepositoryPort } from './amenities.repository.port';
+import { InMemoryAmenitiesRepository } from './infra/amenities.in-memory.repository';
+import { type Amenity } from './amenities.types';
 
-export function createAmenitiesRepository(): AmenitiesRepositoryPort {
-  return new InMemoryAmenitiesRepository();
+export function createInMemoryAmenitiesRepository(
+  amenities: readonly Amenity[] = [],
+): InMemoryAmenitiesRepository {
+  const repository = new InMemoryAmenitiesRepository();
+  repository.replaceAll(amenities);
+  return repository;
 }
 
-export { InMemoryAmenitiesRepository };
+export { loadAmenitiesFromCsv } from './infra/amenities-csv.loader';
 
 export type { Amenity, AmenityRow } from './amenities.types';
 export type { AmenitiesRepositoryPort } from './amenities.repository.port';
+export type { AmenitiesCsvLoadResult } from './infra/amenities-csv.loader';

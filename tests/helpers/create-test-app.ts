@@ -1,17 +1,17 @@
 import path from 'node:path';
 import { createApp } from '../../src/app/app';
-import { InMemoryAmenitiesRepository } from '../../src/modules/amenities';
-import { InMemoryReservationsRepository } from '../../src/modules/reservations';
+import { loadAmenitiesFromCsv } from '../../src/modules/amenities';
+import { loadReservationsFromCsv } from '../../src/modules/reservations';
 
 export async function createTestApp() {
-  const amenitiesRepo = new InMemoryAmenitiesRepository();
-  const reservationsRepo = new InMemoryReservationsRepository();
-
   const amenitiesCsvPath = path.resolve(__dirname, '../fixtures/amenities.csv');
   const reservationsCsvPath = path.resolve(__dirname, '../fixtures/reservations.csv');
 
-  await amenitiesRepo.load(amenitiesCsvPath);
-  await reservationsRepo.load(reservationsCsvPath);
+  const amenitiesLoad = await loadAmenitiesFromCsv(amenitiesCsvPath);
+  const reservationsLoad = await loadReservationsFromCsv(reservationsCsvPath);
 
-  return createApp({ amenitiesRepo, reservationsRepo });
+  return createApp({
+    amenities: amenitiesLoad.entities,
+    reservations: reservationsLoad.entities,
+  });
 }

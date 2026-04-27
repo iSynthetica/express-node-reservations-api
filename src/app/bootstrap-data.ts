@@ -1,19 +1,17 @@
 import { logger } from './logger';
-import { InMemoryAmenitiesRepository } from '../modules/amenities';
-import { InMemoryReservationsRepository } from '../modules/reservations';
+import { loadAmenitiesFromCsv, type Amenity } from '../modules/amenities';
+import { loadReservationsFromCsv, type Reservation } from '../modules/reservations';
 import { env } from './env';
 
 export interface DataBootstrapResult {
-  amenitiesRepo: InMemoryAmenitiesRepository;
-  reservationsRepo: InMemoryReservationsRepository;
+  amenities: Amenity[];
+  reservations: Reservation[];
 }
 
-async function validateReservationAmenityLinks(
-  reservationsRepo: InMemoryReservationsRepository,
-  amenitiesRepo: InMemoryAmenitiesRepository,
-): Promise<string[]> {
-  const amenities = await amenitiesRepo.getAll();
-  const reservations = await reservationsRepo.getAll();
+function validateReservationAmenityLinks(
+  reservations: readonly Reservation[],
+  amenities: readonly Amenity[],
+): string[] {
   const amenityIds = new Set(amenities.map((a) => a.id));
   return reservations
     .filter((r) => !amenityIds.has(r.amenityId))
@@ -21,14 +19,11 @@ async function validateReservationAmenityLinks(
 }
 
 export async function bootstrapData(): Promise<DataBootstrapResult> {
-  const amenitiesRepo = new InMemoryAmenitiesRepository();
-  const reservationsRepo = new InMemoryReservationsRepository();
-
   const amenitiesPath = env.AMENITIES_CSV_PATH;
   const reservationsPath = env.RESERVATIONS_CSV_PATH;
 
-  const amenitiesLoad = await amenitiesRepo.load(amenitiesPath);
-  const reservationsLoad = await reservationsRepo.load(reservationsPath);
+  const amenitiesLoad = await loadAmenitiesFromCsv(amenitiesPath);
+  const reservationsLoad = await loadReservationsFromCsv(reservationsPath);
 
   if (amenitiesLoad.missingFile) {
     logger.warn(
@@ -44,9 +39,12 @@ export async function bootstrapData(): Promise<DataBootstrapResult> {
     );
   }
 
-  const amenityErrors = amenitiesRepo.validate();
-  const reservationErrors = reservationsRepo.validate();
-  const linkErrors = await validateReservationAmenityLinks(reservationsRepo, amenitiesRepo);
+  const amenityErrors = amenitiesLoad.validationIssues;
+  const reservationErrors = reservationsLoad.validationIssues;
+  const linkErrors = validateReservationAmenityLinks(
+    reservationsLoad.entities,
+    amenitiesLoad.entities,
+  );
 
   if (amenityErrors.length > 0) {
     logger.warn(
@@ -71,11 +69,14 @@ export async function bootstrapData(): Promise<DataBootstrapResult> {
 
   logger.info(
     {
-      amenitiesCount: (await amenitiesRepo.getAll()).length,
-      reservationsCount: (await reservationsRepo.getAll()).length,
+      amenitiesCount: amenitiesLoad.entities.length,
+      reservationsCount: reservationsLoad.entities.length,
     },
     'CSV in-memory bootstrap completed',
   );
 
-  return { amenitiesRepo, reservationsRepo };
+  return {
+    amenities: amenitiesLoad.entities,
+    reservations: reservationsLoad.entities,
+  };
 }

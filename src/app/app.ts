@@ -5,23 +5,18 @@ import { corsOptions } from './cors';
 import { httpLogger } from './http-logger';
 import { httpMetricsMiddleware } from './http-metrics';
 import { apiRateLimit } from './rate-limit';
-import { appMetricsReader } from './metrics-reader.adapter';
 import { env } from './env';
-import { logger } from './logger';
 import { createErrorHandler } from './http/middleware/error-handler.middleware';
 import { notFoundHandler } from './http/middleware/not-found-handler.middleware';
-import { createSystemModuleRouter } from '../modules/system';
-import { createReservationsModuleRouter } from '../modules/reservations';
-import type { DataBootstrapResult } from './bootstrap-data';
+import { createAppContainer } from './container';
+import { type DataBootstrapResult } from './bootstrap-data';
 
 export function createApp(data: DataBootstrapResult) {
   const app = express();
-  const systemRouter = createSystemModuleRouter({
-    metricsReader: appMetricsReader,
-  });
+  const container = createAppContainer(data);
 
   const errorHandler = createErrorHandler({
-    logger,
+    logger: container.dependencies.logger,
     isProduction: env.NODE_ENV === 'production',
   });
 
@@ -34,14 +29,8 @@ export function createApp(data: DataBootstrapResult) {
 
   app.use(httpMetricsMiddleware);
 
-  app.use(systemRouter);
-  app.use(
-    '/api/v1',
-    createReservationsModuleRouter({
-      amenitiesRepo: data.amenitiesRepo,
-      reservationsRepo: data.reservationsRepo,
-    }),
-  );
+  app.use(container.routers.systemRouter);
+  app.use('/api/v1', container.routers.reservationsRouter);
   app.use(notFoundHandler);
   app.use(errorHandler);
 
