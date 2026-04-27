@@ -12,7 +12,7 @@ import {
   type ReservationsService,
 } from '../modules/reservations';
 import { createCsvModuleRouter } from '../modules/csv';
-import { authMiddleware, createAuthModuleRouter } from '../modules/auth';
+import { authMiddleware, createAuthModuleRouter, type AuthRepositoryPort } from '../modules/auth';
 import { createSystemModuleRouter } from '../modules/system';
 import { logger } from '../app/logger';
 import type { LoggerPort } from '../shared/ports/logger.port';
@@ -30,7 +30,14 @@ export interface AppDependencies {
   systemRouter: ReturnType<typeof createSystemModuleRouter>;
 }
 
-export function createDependencies(data: DataBootstrapResult): AppDependencies {
+export interface DependencyOverrides {
+  authRepository?: AuthRepositoryPort;
+}
+
+export function createDependencies(
+  data: DataBootstrapResult,
+  overrides: DependencyOverrides = {},
+): AppDependencies {
   const amenitiesRepo = createInMemoryAmenitiesRepository(data.amenities);
   const reservationsRepo = createInMemoryReservationsRepository(data.reservations);
 
@@ -48,7 +55,9 @@ export function createDependencies(data: DataBootstrapResult): AppDependencies {
   const systemRouter = createSystemModuleRouter();
 
   const csvRouter = createCsvModuleRouter({ authMiddleware });
-  const authRouter = createAuthModuleRouter();
+  const authRouter = createAuthModuleRouter({
+    authRepository: overrides.authRepository,
+  });
 
   return {
     logger,
