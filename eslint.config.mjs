@@ -40,6 +40,7 @@ export default [
       sourceType: 'module',
       parserOptions: {
         projectService: {
+          maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 30,
           allowDefaultProject: [
             'tests/helpers/*.ts',
             'tests/integration/*.ts',
