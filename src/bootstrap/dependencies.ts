@@ -12,7 +12,7 @@ import {
   type ReservationsService,
 } from '../modules/reservations';
 import { createCsvModuleRouter } from '../modules/csv';
-import { createAuthModuleRouter } from '../modules/auth';
+import { authMiddleware, createAuthModuleRouter } from '../modules/auth';
 import { createSystemModuleRouter } from '../modules/system';
 import { logger } from '../app/logger';
 import type { LoggerPort } from '../shared/ports/logger.port';
@@ -47,7 +47,7 @@ export function createDependencies(data: DataBootstrapResult): AppDependencies {
   const reservationsRouter = createReservationsModuleRouter(reservationsController);
   const systemRouter = createSystemModuleRouter();
 
-  const csvRouter = createCsvModuleRouter();
+  const csvRouter = createCsvModuleRouter({ authMiddleware });
   const authRouter = createAuthModuleRouter();
 
   return {

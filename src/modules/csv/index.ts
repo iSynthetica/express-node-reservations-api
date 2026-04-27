@@ -1,13 +1,17 @@
-import type { Router } from 'express';
+import type { RequestHandler, Router } from 'express';
 import { createCsvController, type CsvController } from './csv.controller';
 import { createCsvRouter } from './csv.routes';
 import { createCsvService, type CsvService } from './csv.service';
 
-export function createCsvModuleRouter(): Router {
+interface CreateCsvModuleRouterDeps {
+  authMiddleware: RequestHandler;
+}
+
+export function createCsvModuleRouter({ authMiddleware }: CreateCsvModuleRouterDeps): Router {
   const csvService: CsvService = createCsvService();
   const csvController: CsvController = createCsvController({ csvService });
 
-  return createCsvRouter({ controller: csvController });
+  return createCsvRouter({ controller: csvController, authMiddleware });
 }
 
 export { createCsvService } from './csv.service';
