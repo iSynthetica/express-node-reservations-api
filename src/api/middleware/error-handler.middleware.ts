@@ -1,7 +1,7 @@
 import type { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
-import { AppError } from '../../../shared/errors/app.error';
-import { ERROR_CODES } from '../../../shared/errors/error-codes';
-import type { LoggerPort } from '../../../shared/ports/logger.port';
+import { AppError } from '../../shared/errors/app.error';
+import { ERROR_CODES } from '../../shared/errors/error-codes';
+import type { LoggerPort } from '../../shared/ports/logger.port';
 
 interface ErrorHandlerDependencies {
   logger: LoggerPort;

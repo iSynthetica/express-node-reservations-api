@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Request, RequestHandler, Response } from 'express';
 import pinoHttp from 'pino-http';
-import { logger } from './logger';
+import { logger } from '../../app/logger';
 
 type RequestWithId = Request & {
   id?: string | number;
