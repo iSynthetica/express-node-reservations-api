@@ -13,6 +13,7 @@ import {
 } from '../modules/reservations';
 import { createCsvModuleRouter } from '../modules/csv';
 import { createSystemModuleRouter } from '../modules/system';
+import { createAuthModuleRouter } from '../modules/auth';
 import { appMetricsReader } from './metrics-reader.adapter';
 import { type DataBootstrapResult } from './bootstrap-data';
 import { logger } from './logger';
@@ -36,6 +37,7 @@ export interface AppContainer {
     reservationsRouter: ReturnType<typeof createReservationsModuleRouter>;
     systemRouter: ReturnType<typeof createSystemModuleRouter>;
     csvRouter: ReturnType<typeof createCsvModuleRouter>;
+    authRouter: ReturnType<typeof createAuthModuleRouter>;
   };
 }
 
@@ -58,6 +60,7 @@ export function createAppContainer(data: DataBootstrapResult): AppContainer {
     metricsReader: appMetricsReader,
   });
   const csvRouter = createCsvModuleRouter();
+  const authRouter = createAuthModuleRouter();
 
   return {
     dependencies: {
@@ -77,6 +80,7 @@ export function createAppContainer(data: DataBootstrapResult): AppContainer {
       reservationsRouter,
       systemRouter,
       csvRouter,
+      authRouter,
     },
   };
 }

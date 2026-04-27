@@ -17,6 +17,9 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().min(1).default('http://localhost:3000'),
   AMENITIES_CSV_PATH: z.string().min(1).default('data/Amenity.csv'),
   RESERVATIONS_CSV_PATH: z.string().min(1).default('data/Reservations.csv'),
+  AUTH_DB_PATH: z.string().min(1).default('data/auth.sqlite'),
+  JWT_SECRET: z.string().min(1).default('dev-secret-change-me'),
+  JWT_EXPIRES_IN: z.string().min(1).default('1h'),
   RATE_LIMIT_WINDOW_MS: z.coerce
     .number()
     .int()
