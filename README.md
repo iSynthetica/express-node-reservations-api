@@ -1,13 +1,39 @@
-# Express TypeScript Starter
+# Reservations API (Express + TypeScript)
 
-Minimal Express API starter built with TypeScript, ESLint, Prettier, Husky, lint-staged, and commitlint.
+REST API for amenities reservations data loaded from CSV, with auth and JWT-protected CSV parsing.
+
+## Reviewer Notes
+
+This implementation follows the recruitment-task horizon from `help/DEVELOPMENT_PLAN_v1.md`: deliver all required endpoints plus bonus auth/JWT with clear architecture and testability.
+
+### Key tradeoffs
+
+- **CSV -> in-memory for reservations and amenities**
+  - Why: dataset is small and static for this task.
+  - Tradeoff: CSV changes require restart to be visible.
+- **SQLite for auth users only**
+  - Why: zero external services for a recruitment task.
+  - Tradeoff: not ideal for multi-instance horizontal scaling.
+- **Express + modular monolith**
+  - Why: matches requested stack and keeps business modules explicit (`reservations`, `csv`, `auth`, `system`).
+  - Tradeoff: more files/boilerplate than a flat starter.
+- **JWT access token only**
+  - Why: enough for this task scope.
+  - Tradeoff: no refresh token/session lifecycle yet.
+
+### Production path (if extended later)
+
+- Move CSV-backed data to PostgreSQL repositories.
+- Move auth from SQLite to PostgreSQL.
+- Add refresh-token/session strategy (optionally Redis-backed).
+- Add container orchestration/deployment hardening (e.g. Kubernetes).
 
 ## Requirements
 
 - Node.js 20+
 - pnpm 10+
 
-## Installation
+## Local Setup
 
 Install dependencies:
 
@@ -15,50 +41,50 @@ Install dependencies:
 pnpm install
 ```
 
-The `prepare` script will automatically set up Husky Git hooks after install.
-
-## Running The App
-
-Start the development server with automatic reload:
+Start development server (hot reload):
 
 ```bash
 pnpm dev
 ```
 
-Start the production build:
+Build and run production bundle:
 
 ```bash
 pnpm build
 pnpm start
 ```
 
-By default, the app runs on port `3000`.
+Default port is `3200` (from `env.ts`).
 
-Set a custom port:
+Use a custom port:
 
 ```bash
 PORT=4000 pnpm dev
 ```
 
-## Stopping The App
+Stop the app with `Ctrl+C`.
 
-There is no dedicated stop script in this project.
+## API Reference
 
-To stop a running local server started with `pnpm dev` or `pnpm start`, press `Ctrl+C` in the terminal where it is running.
+### System routes (public)
 
-## Available Endpoints
+- `GET /` - starter message
+- `GET /health` - health check
+- `GET /slow` - delayed response (~5s)
+- `GET /metrics` - Prometheus metrics payload (`text/plain`)
+- `GET /error` - throws a test error
 
-- `GET /` returns a basic starter message
-- `GET /health` returns a health check response
-- `GET /api/v1/amenities/:amenityId/reservations?date=<unix_ms>` returns amenity reservations for a specific day
-- `GET /api/v1/users/:userId/reservations` returns user reservations grouped by date
+### Reservations routes (`/api/v1`, public)
 
-### Core Endpoint Examples
+- `GET /api/v1/amenities/:amenityId/reservations?date=<unix_ms>`
+  - `date` is required Unix timestamp in milliseconds
+  - `404` when amenity is missing (`{ "error": "Amenity not found" }`)
+- `GET /api/v1/users/:userId/reservations`
 
-`date` query must be a Unix timestamp in milliseconds.
+Example:
 
 ```bash
-curl "http://localhost:3000/api/v1/amenities/10/reservations?date=1592179200000"
+curl "http://localhost:3200/api/v1/amenities/10/reservations?date=1592179200000"
 ```
 
 ```json
@@ -73,73 +99,109 @@ curl "http://localhost:3000/api/v1/amenities/10/reservations?date=1592179200000"
 ]
 ```
 
-```bash
-curl "http://localhost:3000/api/v1/users/1/reservations"
-```
+### Auth routes (`/api/v1`, public)
 
-```json
-[
-  {
-    "date": "2020-06-15",
-    "reservations": [
-      {
-        "id": 1,
-        "amenityId": 10,
-        "startTime": "05:00",
-        "duration": 60
-      }
-    ]
-  }
-]
-```
+- `POST /api/v1/auth/register`
+  - body: `{ "username": "string(min:3)", "password": "string(min:6)" }`
+  - response: `201 { "id": number, "username": string }`
+- `POST /api/v1/auth/login`
+  - body: `{ "username": "string", "password": "string" }`
+  - response: `200 { "token": "jwt" }`
 
-## NPM Scripts
-
-- `pnpm dev` starts the development server with hot reload
-- `pnpm build` compiles TypeScript into `dist/`
-- `pnpm start` runs the compiled server from `dist/server.js`
-- `pnpm typecheck` runs TypeScript without emitting output
-- `pnpm lint` runs ESLint across the project
-- `pnpm lint:fix` runs ESLint and applies safe fixes
-- `pnpm format` formats supported files with Prettier
-- `pnpm check` checks formatting without changing files
-- `pnpm validate` runs type checking, linting, and formatting checks together
-- `pnpm commitlint --edit .git/COMMIT_EDITMSG` validates a commit message manually
-
-## Quality Checks
-
-Before opening a pull request, run:
+Register example:
 
 ```bash
-pnpm validate
+curl -X POST "http://localhost:3200/api/v1/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"demo-user","password":"secret123"}'
 ```
 
-Git hooks also run automatically:
+Login example:
 
-- `pre-commit` runs `lint-staged` on staged files
-- `commit-msg` validates commit messages with commitlint
+```bash
+curl -X POST "http://localhost:3200/api/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"demo-user","password":"secret123"}'
+```
+
+### CSV route (`/api/v1`, JWT protected)
+
+- `POST /api/v1/csv/parse`
+  - headers: `Authorization: Bearer <token>`
+  - content-type: `multipart/form-data`
+  - field name: `file`
+  - accepts CSV file upload (in-memory parsing)
+
+Example (replace `<token>`):
+
+```bash
+curl -X POST "http://localhost:3200/api/v1/csv/parse" \
+  -H "Authorization: Bearer <token>" \
+  -F "file=@./data/Amenity.csv;type=text/csv"
+```
+
+## Common Commands
+
+- `pnpm dev` - run dev server with reload
+- `pnpm build` - compile TypeScript to `dist/`
+- `pnpm start` - run compiled app from `dist/index.js`
+- `pnpm typecheck` - TypeScript check only
+- `pnpm lint` - ESLint
+- `pnpm lint:fix` - ESLint autofix
+- `pnpm test` - run Vitest once
+- `pnpm test:watch` - run Vitest in watch mode
+- `pnpm format` - write Prettier formatting
+- `pnpm check` - check Prettier formatting
+- `pnpm validate` - typecheck + lint + check
+
+### Recommended reviewer checks
+
+```bash
+pnpm typecheck
+pnpm lint
+pnpm test
+```
+
+## Environment Variables
+
+Defined in `src/app/env.ts` (with defaults):
+
+- `PORT` (default `3200`)
+- `NODE_ENV` (`development` | `test` | `production`)
+- `APP_NAME` (default `express-ts-starter`)
+- `LOG_LEVEL` (default `info`)
+- `LOG_FILE_PATH` (default `./logs/app.log`)
+- `CORS_ORIGIN` (default `http://localhost:3000`; comma-separated allowed)
+- `AMENITIES_CSV_PATH` (default `data/Amenity.csv`)
+- `RESERVATIONS_CSV_PATH` (default `data/Reservations.csv`)
+- `AUTH_DB_PATH` (default `data/auth.sqlite`)
+- `JWT_SECRET`
+- `JWT_EXPIRES_IN` (default `1h`)
+- `RATE_LIMIT_WINDOW_MS` (default `900000`)
+- `RATE_LIMIT_MAX_REQUESTS` (default `100`)
 
 ## Project Structure
 
 ```text
 src/
+|-- api/
+|   `-- middleware/
 |-- app/
-|   |-- http/
-|   |   `-- middleware/
 |   |-- app.ts
-|   |-- cors.ts
+|   |-- bootstrap-data.ts
 |   |-- env.ts
-|   |-- logger.ts
 |   `-- server.ts
+|-- bootstrap/
+|   |-- dependencies.ts
+|   |-- register-core-middleware.ts
+|   |-- register-error-handling.ts
+|   `-- register-routes.ts
 |-- modules/
+|   |-- amenities/
+|   |-- auth/
+|   |-- csv/
+|   |-- reservations/
 |   `-- system/
 |-- shared/
 `-- index.ts
 ```
-
-- `src/app/` contains runtime, HTTP, and infrastructure wiring
-- `src/modules/` contains business modules with layered internals
-- `src/shared/` contains shared primitives and contracts
-- `src/index.ts` is the entrypoint
-
-For the full tree and architectural breakdown, see `project-structure.md` and `ARCHITECTURE.md`.
