@@ -24,6 +24,18 @@ interface CreateAuthServiceDeps {
   authRepository: AuthRepositoryPort;
 }
 
+function isUniqueUsernameConstraintError(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+
+  const candidate = error as { message?: unknown };
+  return (
+    typeof candidate.message === 'string' &&
+    candidate.message.includes('UNIQUE constraint failed: users.username')
+  );
+}
+
 export function createAuthService({ authRepository }: CreateAuthServiceDeps): AuthService {
   return {
     async register(input: RegisterInput): Promise<PublicAuthUser> {
@@ -44,10 +56,19 @@ export function createAuthService({ authRepository }: CreateAuthServiceDeps): Au
 
       const passwordHash = await bcrypt.hash(input.password, 10);
 
-      return authRepository.createUser({
-        username: input.username,
-        passwordHash,
-      });
+      try {
+        return await authRepository.createUser({
+          username: input.username,
+          passwordHash,
+        });
+      } catch (error) {
+        if (isUniqueUsernameConstraintError(error)) {
+          throw new AppError(409, 'Username already exists', {
+            code: ERROR_CODES.CONFLICT,
+          });
+        }
+        throw error;
+      }
     },
 
     async login(input: LoginInput): Promise<{ token: string }> {

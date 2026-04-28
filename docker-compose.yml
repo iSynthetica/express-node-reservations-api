@@ -1,0 +1,27 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3200:3200'
+    env_file:
+      - .env.example
+    environment:
+      NODE_ENV: production
+      PORT: 3200
+      AUTH_DB_PATH: /app/data/auth.docker.sqlite
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://localhost:3200/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
